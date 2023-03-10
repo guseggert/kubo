@@ -31,7 +31,7 @@ jobs:
         with:
           name: ${{ github.job }}
       - run: |
-          make -j 1 test/unit/gotest.junit.xml &&
+          make -j $(nproc) test/unit/gotest.junit.xml &&
             [[ ! $(jq -s -c 'map(select(.Action == "fail")) | .[]' test/unit/gotest.json) ]]
       - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # v3.1.0
         if: always()
@@ -59,8 +59,23 @@ jobs:
           mv go.mod.bak go.mod
           mv go.sum.bak go.sum
         working-directory: docs/examples/kubo-as-a-library
+
+      - name: Convert jUnit XML to HTML
+        if: always()
+        uses: pl-strflt/junit-xml-to-html@v1
+        with:
+          mode: 'no-frames'
+          input: 'test/unit/gotest.junit.xml'
+          output: 'test/unit/gotest.junit.html'
+
+      - name: Convert jUnit XML to HTML
+        if: always()
+        run: |
+          go install github.com/vakenbolt/go-test-report@latest
+          cat test/unit/gotest.json | ~/go/bin/go-test-report -o test/unit/gotest.html
+          
       - uses: actions/upload-artifact@v3
         with:
           name: unit
-          path: test/unit/gotest.junit.xml
+          path: test/unit/gotest*
         if: always()

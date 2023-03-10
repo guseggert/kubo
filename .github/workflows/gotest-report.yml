@@ -1,0 +1,19 @@
+name: 'ci/gh-experiment: go test report'
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ['ci/gh-experiment: go test']
+    types: [completed]
+    
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dorny/test-reporter@v1
+        with:
+          name: Go Tests Report
+          artifact: unit
+          path: gotest.junit.xml
+          reporter: java-junit
+        
